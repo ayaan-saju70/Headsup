@@ -1,6 +1,6 @@
 # Padam Nokkiye (പടം നോക്കിയേ)
 
-Offline-first Malayalam movie charades game for a college Onam-week event. Single booth device, forehead-hold guessing format, tap or tilt input.
+Offline-first Malayalam movie charades game for Sargam 2026. Single booth device, forehead-hold guessing format, tap or tilt input.
 
 ## Status
 
