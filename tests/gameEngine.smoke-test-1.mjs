@@ -3,6 +3,8 @@ import { generateDeck, getCurrentMovieFromDeck } from "../src/gameEngine/deck.js
 import { createGameEngine } from "../src/gameEngine/gameEngine.js";
 import { startTiltInput } from "../src/gameEngine/tilt.js";
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Test filtering
 const pool = getFilteredMovies(["10s", "20s"], ["easy"]);
 console.log("Filtered pool (10s+20s, easy):", pool.length, "movies");
@@ -25,8 +27,11 @@ engine.startGame();
 console.log("Game active after start:", lastState.gameActive, "deck size:", lastState.deck.length);
 
 engine.handleCorrect();
+await delay(300);
 engine.handlePass();
+await delay(300);
 engine.handleCorrect();
+await delay(300);
 console.log("Score after 2 correct + 1 pass:", engine.getScore(), "(expect 2)");
 console.log("History:", engine.getPlayedHistory());
 
@@ -45,6 +50,7 @@ const smallPoolSize = engine2.getFilteredMovies().length;
 console.log("Small pool size:", smallPoolSize);
 for (let i = 0; i < smallPoolSize * 3; i++) {
   engine2.handleCorrect();
+  await delay(300);
 }
 console.log("Score after cycling through deck 3x:", engine2.getScore(), "(expect", smallPoolSize * 3, ")");
 console.log("Current movie still exists after exhaustion:", !!engine2.getCurrentMovie());
@@ -72,13 +78,11 @@ console.log("Throws on zero matches:", threwExpectedError);
 engine3.setFilters({ eras: ["90s"], diffs: ["hard"] }); // This yields exactly 2 movies
 engine3.startGame();
 console.log("engine3 pool size:", engine3.getFilteredMovies().length);
-// 2. Calling handleCorrect and handlePass rapidly in sequence
+// 2. Calling handleCorrect and handlePass rapidly in sequence (debounced, should register only 1st call)
 engine3.handleCorrect();
-engine3.handlePass();
-engine3.handleCorrect();
-engine3.handlePass();
-engine3.handleCorrect();
-console.log("Score after rapid calls:", engine3.getScore(), "(expect 3)");
+engine3.handleCorrect(); // debounced
+engine3.handlePass();    // debounced
+console.log("Score after rapid double-taps:", engine3.getScore(), "(expect 1 due to 250ms debounce)");
 
 // 3. Calling handleCorrect after the game has ended (should do nothing)
 engine3.endGame();
@@ -104,8 +108,11 @@ bonusEngine.startGame();
 
 // 1. Fail to qualify (< 60%)
 bonusEngine.handleCorrect();
+await delay(300);
 bonusEngine.handlePass();
+await delay(300);
 bonusEngine.handlePass();
+await delay(300);
 bonusEngine.endGame();
 console.log("Bonus available (1/3 correct):", bonusEngine.getState().bonusAvailable, "(expect false)");
 
@@ -114,8 +121,11 @@ bonusEngine.resetGame();
 bonusEngine.setFilters({ eras: [], diffs: [] });
 bonusEngine.startGame();
 bonusEngine.handleCorrect();
+await delay(300);
 bonusEngine.handleCorrect();
+await delay(300);
 bonusEngine.handlePass();
+await delay(300);
 bonusEngine.endGame();
 console.log("Bonus available (2/3 correct):", bonusEngine.getState().bonusAvailable, "(expect true)");
 

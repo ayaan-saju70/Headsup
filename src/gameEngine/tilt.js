@@ -1,56 +1,48 @@
 export async function startTiltInput({ onTiltDown, onTiltUp, windowObj }) {
   const win = windowObj || (typeof window !== 'undefined' ? window : null);
-  
-  // 1. Handle missing API (graceful fallback)
-  if (!win || !win.DeviceOrientationEvent) {
-    return false;
-  }
+  if (!win || !win.DeviceOrientationEvent) return false;
 
-  // 2. Request permission (iOS 13+)
   if (typeof win.DeviceOrientationEvent.requestPermission === 'function') {
     try {
       const permission = await win.DeviceOrientationEvent.requestPermission();
-      if (permission !== 'granted') {
-        return false;
-      }
+      if (permission !== 'granted') return false;
     } catch (err) {
-      return false; // Fallback if permission request fails
+      return false;
     }
   }
 
   let neutralBeta = null;
   let neutralGamma = null;
-  let state = 'neutral'; // 'neutral', 'tilted_down', 'tilted_up'
-  
-  const TILT_THRESHOLD = 30; // Degrees from neutral to trigger
-  const RETURN_THRESHOLD = 15; // Degrees from neutral to reset
+  let latestBeta = null;
+  let latestGamma = null;
+  let state = 'neutral';
+  let calibrating = false;
+  let calibrationSamples = [];
+
+  const TILT_THRESHOLD = 30;
+  const RETURN_THRESHOLD = 15;
 
   const handleOrientation = (event) => {
-    let { beta, gamma } = event;
-    
-    // Ignore events with no data (some browsers fire empty events initially)
-    if (beta === null || beta === undefined || gamma === null || gamma === undefined) return;
+    const { beta, gamma } = event;
+    if (beta == null || gamma == null) return;
+    latestBeta = beta;
+    latestGamma = gamma;
 
-    // 3. Calibration: lock in the resting orientation on first valid event
-    if (neutralBeta === null) {
-      neutralBeta = beta;
-      neutralGamma = gamma;
+    if (calibrating) {
+      calibrationSamples.push({ beta, gamma });
       return;
     }
+    if (neutralBeta === null) return; // not calibrated yet — ignore events
 
-    // 4. Calculate relative tilt
     let deltaBeta = beta - neutralBeta;
     let deltaGamma = gamma - neutralGamma;
-    
-    // Normalize wrapped angles
     if (deltaBeta > 180) deltaBeta -= 360;
     if (deltaBeta < -180) deltaBeta += 360;
     if (deltaGamma > 180) deltaGamma -= 360;
     if (deltaGamma < -180) deltaGamma += 360;
 
-    // 5. Debounce & State Management
-    // Direction is decided by beta (front-back tilt) only.
-    // gamma (left-right) is only used to reject ambiguous/sideways motion.
+    console.log('[TILT]', { beta, gamma, neutralBeta, neutralGamma, deltaBeta, deltaGamma, state });
+
     const isClearlySideways = Math.abs(deltaGamma) > Math.abs(deltaBeta) && Math.abs(deltaGamma) > TILT_THRESHOLD;
 
     if (state === 'neutral' && !isClearlySideways) {
@@ -61,19 +53,37 @@ export async function startTiltInput({ onTiltDown, onTiltUp, windowObj }) {
         state = 'tilted_up';
         if (onTiltUp) onTiltUp();
       }
-    } else if (state !== 'neutral') {
-      // 6. Require return to neutral before another tilt can fire
-      if (Math.abs(deltaBeta) < RETURN_THRESHOLD) {
-        state = 'neutral';
-      }
+    } else if (state !== 'neutral' && Math.abs(deltaBeta) < RETURN_THRESHOLD) {
+      state = 'neutral';
     }
   };
 
   win.addEventListener('deviceorientation', handleOrientation);
 
+  // Explicit calibration — call this once the guesser has the phone at
+  // their forehead, not on listener attach.
+  function calibrate(sampleWindowMs = 400) {
+    return new Promise((resolve) => {
+      calibrating = true;
+      calibrationSamples = [];
+      setTimeout(() => {
+        calibrating = false;
+        if (calibrationSamples.length > 0) {
+          neutralBeta = calibrationSamples.reduce((s, v) => s + v.beta, 0) / calibrationSamples.length;
+          neutralGamma = calibrationSamples.reduce((s, v) => s + v.gamma, 0) / calibrationSamples.length;
+        } else if (latestBeta !== null) {
+          // fallback if no samples arrived during the window
+          neutralBeta = latestBeta;
+          neutralGamma = latestGamma;
+        }
+        state = 'neutral';
+        resolve(neutralBeta !== null);
+      }, sampleWindowMs);
+    });
+  }
+
   return {
-    stop: () => {
-      win.removeEventListener('deviceorientation', handleOrientation);
-    }
+    calibrate,
+    stop: () => win.removeEventListener('deviceorientation', handleOrientation),
   };
 }

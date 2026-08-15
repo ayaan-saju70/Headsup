@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Padam Nokkiye - Setup Screen</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Setup Screen View -->
+        <div id="view-setup" class="view-panel active">
+            <!-- Premium Header Area -->
+            <header class="header">
+                <h1 class="logo-text">പടം നോക്കിയേ</h1>
+                <p class="tagline">Padam Nokkiye — Malayalam Movie Charades</p>
+            </header>
+
+            <main class="setup-content">
+                <!-- Era Selection -->
+                <section class="setup-group">
+                    <h2 class="section-title">Era / കാലഘട്ടം</h2>
+                    <div class="chips-container" id="era-chips">
+                        <button class="chip active" data-value="90s" aria-pressed="true">90s</button>
+                        <button class="chip active" data-value="00s" aria-pressed="true">00s</button>
+                        <button class="chip active" data-value="10s" aria-pressed="true">10s</button>
+                        <button class="chip active" data-value="20s" aria-pressed="true">20s</button>
+                    </div>
+                </section>
+
+                <!-- Difficulty Selection -->
+                <section class="setup-group">
+                    <h2 class="section-title">Difficulty / ബുദ്ധിമുട്ട്</h2>
+                    <div class="chips-container" id="diff-chips">
+                        <button class="chip active" data-value="easy" aria-pressed="true">Easy</button>
+                        <button class="chip active" data-value="medium" aria-pressed="true">Medium</button>
+                        <button class="chip active" data-value="hard" aria-pressed="true">Hard</button>
+                    </div>
+                </section>
+
+                <!-- Config Grid (Round Length & Input Mode) -->
+                <div class="config-grid">
+                    <!-- Round Length Selection -->
+                    <section class="setup-group">
+                        <h2 class="section-title">Round Time / സമയം</h2>
+                        <div class="segmented-control" id="time-control">
+                            <button class="segment" data-value="60">60s</button>
+                            <button class="segment active" data-value="90">90s</button>
+                            <button class="segment" data-value="120">120s</button>
+                        </div>
+                    </section>
+
+                    <!-- Input Mode Selection -->
+                    <section class="setup-group">
+                        <h2 class="section-title">Controls / കൺട്രോൾസ്</h2>
+                        <div class="segmented-control" id="input-control">
+                            <button class="segment active" data-value="tap">Tap Only</button>
+                            <button class="segment" data-value="tilt">Tilt + Tap</button>
+                        </div>
+                    </section>
+                </div>
+            </main>
+
+            <!-- Dynamic Match Count Box & Action Bar -->
+            <footer class="footer-actions">
+                <div class="match-count-indicator" id="match-count-box">
+                    <span class="match-pulse"></span>
+                    <span id="match-count-text">Calculating matched movies...</span>
+                </div>
+                
+                <button class="btn-start" id="btn-start-game" disabled>
+                    <span>Start Game / കളി തുടങ്ങാം</span>
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+            </footer>
+        </div>
+
+        <!-- Game Playback Screen View -->
+        <div id="view-game" class="view-panel">
+            <!-- HUD / Stats bar -->
+            <header class="hud-bar">
+                <div class="hud-item timer-readout">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
+                    </svg>
+                    <span id="hud-timer">00</span>
+                </div>
+                <div class="hud-item score-readout">
+                    <span class="hud-label">SCORE:</span>
+                    <span id="hud-score">0</span>
+                </div>
+            </header>
+
+            <!-- Movie Display Area -->
+            <main class="card-display">
+                <div class="card-inner">
+                    <h1 id="movie-title" class="movie-title-large">Loading...</h1>
+                    <div class="card-metadata">
+                        <span id="tag-era" class="badge badge-era">90s</span>
+                        <span id="tag-diff" class="badge badge-diff">Easy</span>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Full-width Action Buttons -->
+            <footer class="game-actions">
+                <button class="action-btn btn-pass" id="btn-action-pass">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                    <span>Pass / ഒഴിവാക്കുക</span>
+                </button>
+                <button class="action-btn btn-correct" id="btn-action-correct">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                    </svg>
+                    <span>Correct / ശരി</span>
+                </button>
+            </footer>
+        </div>
+
+        <!-- Game Over / End Screen View -->
+        <div id="view-end" class="view-panel">
+            <!-- Final Scoreboard -->
+            <header class="end-header">
+                <p class="end-subtitle">Game Over / കളി കഴിഞ്ഞു</p>
+                <div class="final-score-container">
+                    <span id="end-score-val">0</span>
+                    <span class="score-label">Points / പോയിന്റുകൾ</span>
+                </div>
+            </header>
+
+            <!-- Scrollable Played History List -->
+            <main class="history-content">
+                <h3 class="section-title">Movie History / ചരിത്രം</h3>
+                <div class="history-list" id="history-items-list">
+                    <!-- Dynamic history rows populated by JS -->
+                </div>
+            </main>
+
+            <!-- Navigation Buttons -->
+            <footer class="end-actions">
+                <button class="btn-start" id="btn-play-again">
+                    <span>Play Again / വീണ്ടും കളിക്കാം</span>
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </button>
+                <button class="action-btn btn-pass" id="btn-change-filters">
+                    <span>Change Filters / ഫിൽട്ടർ മാറ്റുക</span>
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Script references -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>

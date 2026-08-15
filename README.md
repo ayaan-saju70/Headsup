@@ -1,102 +1,72 @@
-# Padam Nokkiye — Gameplay Engine (Person A)
+# Padam Nokkiye (പടം നോക്കിയേ)
 
-Covers Day 1–3 of the playbook: dataset, state, filtering, deck
-generation, current movie, timer, Correct/Pass, score, played history,
-round lifecycle, and reset. Tilt controls and Bonus Round are now implemented.
+Offline-first Malayalam movie charades game for a college Onam-week event. Single booth device, forehead-hold guessing format, tap or tilt input.
 
-## Files
+## Status
 
-```
-src/gameEngine/
-  movieDataset.js   Static dataset — { t, era, diff }. Edit this to add movies.
-  gameState.js       Shape of the single game-state object.
-  filtering.js        getFilteredMovies(eras, diffs) — never mutates the dataset.
-  deck.js             shuffle / generateDeck / reshuffle on exhaustion.
-  timer.js            Timer class — owns remainingSeconds only, no visuals.
-  gameEngine.js       Main entry point — the interface contract below.
-  useGameEngine.js    React hook wrapper around gameEngine.js.
-tests/
-  gameEngine.smoke-test.mjs   Run with `node tests/gameEngine.smoke-test.mjs`
-```
+MVP is playable via tap. **Tilt input is broken — do not enable Tilt + Tap at the event until this is resolved.** See [Known Issues](#known-issues).
 
-## Interface contract (for Person B)
+## Architecture
 
-```js
-import { useGameEngine } from "./src/gameEngine/useGameEngine.js";
-
-function GameScreen() {
-  const { state, engine } = useGameEngine();
-
-  // Setup screen
-  engine.setFilters({ eras: ["10s", "20s"], diffs: ["easy"] });
-  engine.setRoundLength(60); // 60 | 90 | 120
-
-  // Start
-  engine.startGame();
-
-  // During play
-  const movie = engine.getCurrentMovie(); // { t, era, diff }
-  engine.handleCorrect();
-  engine.handlePass();
-  state.remainingSeconds; // updates every second automatically
-  state.score;
-  state.gameActive;       // false once time hits 0
-
-  // End screen (Normal Round)
-  engine.getScore();
-  engine.getPlayedHistory(); // [{ title, result: "correct" | "passed" }]
-
-  // Bonus Round
-  if (state.bonusAvailable) {
-    engine.startBonusRound();
-    
-    // ... wait for round to finish, then:
-    engine.getBonusScore();
-    engine.getBonusPlayedHistory();
-  }
-
-  // Play again
-  engine.resetGame();
-}
-```
-
-`state` re-renders your component automatically on every change (score,
-timer tick, movie advance, etc.) — you don't need to poll anything.
-
-> **Note on Bonus Round:** The bonus round's score (`bonusScore`) and history (`bonusPlayed`) are completely separate from the normal round. They are **not** additive. A player can get 10 points in the normal round and 4 in the bonus round; they don't combine into 14.
-
-**If you need this outside React** (e.g. testing in plain JS), skip the
-hook and use `createGameEngine({ onStateChange })` from `gameEngine.js`
-directly — same methods, no React dependency.
-
-## Notes / things to flag before changing
-
-Per the playbook, don't silently change any of these without telling
-Person B: state shape, function names in the interface above, the
-`{ t, era, diff }` dataset schema, or return value shapes (e.g. what
-`getPlayedHistory()` returns).
-
-## Dataset
-
-37 movies across `90s / 00s / 10s / 20s` × `easy / medium / hard`.
-Titles and eras were checked, but **double-check the full list against
-your own event knowledge before the event** — a couple of entries
-(e.g. era placement for less mainstream titles) are worth a second
-pass since a bad era tag would break filtering silently.
-
-## Git workflow (per the playbook's Section 18)
+Two-owner split, enforced by interface contract — see `PERSON_A_GAMEPLAY_PLAYBOOK.pdf` and `PERSON_B_UI_PWA_PLAYBOOK.pdf` for full role scope.
 
 ```
-git checkout -b feature/game-engine
-git add .
-git commit -m "feat: add movie dataset"
-git commit -m "feat: implement filtering"
-git commit -m "feat: implement deck generation"
-git commit -m "feat: implement timer"
-git commit -m "feat: implement scoring"
-git push origin feature/game-engine
+Full Dataset → Filtering → Deck (shuffle/reshuffle) → Game Engine (state, score, timer) → UI (app.js)
 ```
 
-Then merge into `main` once Person B confirms the interface works,
-resolving conflicts as they come up (see the git workflow you already
-have from our earlier conversation).
+| File | Owns | 
+|---|---|
+| `movieDataset.js` | Static movie data (`{ t, era, diff }`) |
+| `filtering.js` | Era/difficulty filtering, never mutates source |
+| `deck.js` | Shuffle, current-card retrieval, reshuffle on exhaustion |
+| `timer.js` | Countdown only — no UI concerns |
+| `gameEngine.js` | Single entry point. Wraps state/filtering/deck/timer. This is the only module the UI should import from. |
+| `gameState.js` | Central state shape, reset guarantees |
+| `tilt.js` | Optional tilt input — **currently unwired and buggy, see below** |
+| `app.js` | UI glue: DOM refs, screen switching, calls into `gameEngine.js` |
+| `index.html` / `style.css` | Three screens: Setup, Game, End |
+
+### Interface contract (Person A → Person B)
+
+```
+getFilteredMovies()
+startGame()
+getCurrentMovie()
+handleCorrect()
+handlePass()
+getScore()
+getPlayedHistory()
+endGame()
+resetGame()
+```
+
+Do not change function names, state shape, or the dataset schema without updating both sides.
+
+## Known Issues
+
+### Tilt input not detecting motion (open)
+
+Symptom: with Tilt + Tap selected, tilting the phone produces no Correct/Pass trigger.
+
+Debugging so far, in order:
+1. Confirmed `startTiltInput()` was never imported/called from `app.js` — listener was never attached. Fixed by wiring it into `startGameSession()`, gated on `configState.inputMode === "tilt"`.
+2. Found calibration locked to the *first* `deviceorientation` event received — which fires while the phone is still in-hand at Start, not at the guesser's forehead. Replaced with an explicit `calibrate()` step: a ~400ms sampled-average window triggered after Start, with a "Get ready..." beat on screen before the round begins.
+3. Removed leftover `console.log('[TILT DEBUG]', ...)` that was firing every event.
+4. Currently debugging: detection is **intermittent** — some tilts register, some don't, no confirmed pattern yet. Leading suspects, not yet confirmed:
+   - State machine stuck in `tilted_down`/`tilted_up` because `RETURN_THRESHOLD` (15°) isn't reliably reached between gestures on a real forehead-hold — next tilt silently no-ops until state resets.
+   - Calibration window (`calibrate()`, ~400ms average) capturing the phone mid-settle rather than at rest, producing a baseline that drifts round to round.
+   - Possible debounce collision between `tilt.js`'s own state gate and `gameEngine.js`'s separate 250ms `ACTION_DEBOUNCE_MS`.
+
+**Next step:** log `deltaBeta` + `state` in `tilt.js` and the debounce check in `gameEngine.js`'s `handleCorrect()`/`handlePass()`, run repeated deliberate tilts, and check what's true at each failure — needed to tell these three apart before changing anything.
+
+**Do not test over `http://<lan-ip>`** — Android Chrome requires a secure context (`https://` or `localhost`) for `DeviceOrientationEvent` to fire at all. Confirm the test URL before assuming a code bug.
+
+**Cleanup owed before ship:** ensure `tiltHandle.stop()` is called on round end / Play Again / Change Filters. If the listener isn't torn down between rounds, player 2 inherits player 1's calibration.
+
+## Fallback plan
+
+Per the playbooks' emergency scope-cut rule: if tilt isn't reliable by Day 6–7, cut it. Tap-only is fully functional and is the P0 requirement — tilt is P2/stretch. Do not let this bug block the event build.
+
+## Not in scope (by design)
+
+No backend, no database, no auth, no accounts, no multiplayer networking, no external movie APIs, no AI services. Static offline-first web app only.

@@ -69,8 +69,16 @@ export function createGameEngine({ onStateChange } = {}) {
   }
 
   // ---- Lifecycle -------------------------------------------------------
-  function startGame() {
-    filteredPool = getFilteredMovies();
+  let lastActionTimestamp = 0;
+  const ACTION_DEBOUNCE_MS = 250;
+
+  function startGame(eras = state.selectedEras, diffs = state.selectedDiffs, roundLength = state.roundLength, inputMode = state.inputMode) {
+    if (eras !== undefined) state.selectedEras = eras;
+    if (diffs !== undefined) state.selectedDiffs = diffs;
+    if (roundLength !== undefined) state.roundLength = roundLength;
+    if (inputMode !== undefined) state.inputMode = inputMode;
+
+    filteredPool = getFilteredMovies(state.selectedEras, state.selectedDiffs);
     if (filteredPool.length === 0) {
       throw new Error("No movies match the selected filters — cannot start game.");
     }
@@ -84,6 +92,7 @@ export function createGameEngine({ onStateChange } = {}) {
     state.gameActive = true;
     state.status = "PLAYING";
 
+    lastActionTimestamp = 0;
     notify();
     timer.start(state.roundLength);
   }
@@ -117,6 +126,7 @@ export function createGameEngine({ onStateChange } = {}) {
     state.gameActive = true;
     state.status = "PLAYING";
 
+    lastActionTimestamp = 0;
     notify();
     timer.start(30); // Bonus round is always 30s
   }
@@ -141,11 +151,25 @@ export function createGameEngine({ onStateChange } = {}) {
     timer.stop();
     state = resetState();
     filteredPool = [];
+    lastActionTimestamp = 0;
     notify();
   }
 
   // ---- Current movie -----------------------------------------------
   function getCurrentMovie() {
+    if (!state.deck || state.deck.length === 0) {
+      if (filteredPool.length === 0) {
+        filteredPool = getFilteredMovies();
+      }
+      if (filteredPool.length === 0) return null;
+      state.deck = generateDeck(filteredPool);
+      state.currentIndex = 0;
+    }
+    if (isDeckExhausted(state.deck, state.currentIndex)) {
+      const reshuffled = reshuffleDeck(filteredPool);
+      state.deck = reshuffled.deck;
+      state.currentIndex = reshuffled.currentIndex;
+    }
     return getCurrentMovieFromDeck(state.deck, state.currentIndex);
   }
 
@@ -161,6 +185,10 @@ export function createGameEngine({ onStateChange } = {}) {
   // ---- Correct / Pass --------------------------------------------------
   function handleCorrect() {
     if (!state.gameActive) return;
+    const now = Date.now();
+    if (now - lastActionTimestamp < ACTION_DEBOUNCE_MS) return;
+    lastActionTimestamp = now;
+
     const movie = getCurrentMovie();
     if (!movie) return;
 
@@ -178,6 +206,10 @@ export function createGameEngine({ onStateChange } = {}) {
 
   function handlePass() {
     if (!state.gameActive) return;
+    const now = Date.now();
+    if (now - lastActionTimestamp < ACTION_DEBOUNCE_MS) return;
+    lastActionTimestamp = now;
+
     const movie = getCurrentMovie();
     if (!movie) return;
 
