@@ -1,0 +1,31 @@
+{
+  "name": "Padam Nokkiye",
+  "short_name": "Padam Nokkiye",
+  "description": "A two-player Malayalam movie guessing game",
+  "start_url": "/Headsup/index.html",
+  "scope": "/Headsup/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#99372d",
+  "theme_color": "#99372d",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
