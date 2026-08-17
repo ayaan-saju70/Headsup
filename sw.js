@@ -1,4 +1,4 @@
-const CACHE_NAME = 'padam-nokkiye-v1';
+const CACHE_NAME = 'padam-nokkiye-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -11,11 +11,9 @@ const ASSETS_TO_CACHE = [
   './src/gameEngine/filtering.js',
   './src/gameEngine/gameEngine.js',
   './src/gameEngine/gameState.js',
-  './src/gameEngine/mock-engine.js',
   './src/gameEngine/movieDataset.js',
   './src/gameEngine/tilt.js',
-  './src/gameEngine/timer.js',
-  './src/gameEngine/useGameEngine.js'
+  './src/gameEngine/timer.js'
 ];
 
 // Install event: cache core assets

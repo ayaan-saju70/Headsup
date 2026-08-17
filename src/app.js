@@ -119,9 +119,17 @@ async function startGameSession() {
     });
     if (tiltHandle) {
       movieTitle.textContent = "Get ready...";
-      await tiltHandle.calibrate(); // ~400ms window — hold phone at forehead now
+      const calibrated = await tiltHandle.calibrate(); // ~400ms window — hold phone at forehead now
+      if (!calibrated) {
+        movieTitle.textContent = "Tilt unavailable — using tap controls";
+        teardownTilt();
+        // brief delay so they can read the message before startGame overwrites it
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+    } else {
+      movieTitle.textContent = "Tilt unavailable — using tap controls";
+      await new Promise(resolve => setTimeout(resolve, 1500));
     }
-    // if tiltHandle is false, sensors unavailable — silently continues as tap-only
   }
 
   // Call the real engine's startGame

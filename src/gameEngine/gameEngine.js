@@ -254,10 +254,8 @@ export function createGameEngine({ onStateChange } = {}) {
     handlePass,
     getScore,
     getPlayedHistory,
-    getBonusScore,
-    getBonusPlayedHistory,
-    checkBonusQualification,
-    startBonusRound,
+    // Scope cut: Bonus round functions (getBonusScore, getBonusPlayedHistory, checkBonusQualification, startBonusRound)
+    // were removed from the public interface as the UI does not implement bonus rounds.
     endGame,
     resetGame,
     getState,
