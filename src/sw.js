@@ -11,11 +11,9 @@ const ASSETS_TO_CACHE = [
   './gameEngine/filtering.js',
   './gameEngine/gameEngine.js',
   './gameEngine/gameState.js',
-  './gameEngine/mock-engine.js',
   './gameEngine/movieDataset.js',
   './gameEngine/tilt.js',
-  './gameEngine/timer.js',
-  './gameEngine/useGameEngine.js'
+  './gameEngine/timer.js'
 ];
 
 // Install event: cache core assets
