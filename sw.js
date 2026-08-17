@@ -2,18 +2,20 @@ const CACHE_NAME = 'padam-nokkiye-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
+  './src/style.css',
+  './src/app.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './gameEngine/deck.js',
-  './gameEngine/filtering.js',
-  './gameEngine/gameEngine.js',
-  './gameEngine/gameState.js',
-  './gameEngine/movieDataset.js',
-  './gameEngine/tilt.js',
-  './gameEngine/timer.js'
+  './src/gameEngine/deck.js',
+  './src/gameEngine/filtering.js',
+  './src/gameEngine/gameEngine.js',
+  './src/gameEngine/gameState.js',
+  './src/gameEngine/mock-engine.js',
+  './src/gameEngine/movieDataset.js',
+  './src/gameEngine/tilt.js',
+  './src/gameEngine/timer.js',
+  './src/gameEngine/useGameEngine.js'
 ];
 
 // Install event: cache core assets
