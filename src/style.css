@@ -629,4 +629,87 @@ html, body {
   width: 100%;
 }
 
+/* -----------------------------------------------------------------------
+   Landscape Rotation for Game Screen Only (#view-game.active)
+----------------------------------------------------------------------- */
+#view-game.active {
+  display: flex;
+  flex-direction: row;
+  box-sizing: border-box;
+  
+  /* Visual orientation rotation & dimension swap */
+  transform: rotate(90deg);
+  transform-origin: center center;
+  width: 100vh;
+  height: 100vw;
+  
+  /* Centering positioning: 
+     Setting top/left to 50% puts the top-left of the layout box at center.
+     Negative margins offset by half of the layout width/height respectively:
+     margin-top: -50% of layout height (100vw) = -50vw
+     margin-left: -50% of layout width (100vh) = -50vh */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin-top: -50vw;
+  margin-left: -50vh;
+  
+  /* Reset spacing and add visual padding (layout height is visual width) */
+  padding: 20px 24px;
+  
+  /* Pristine background rendering */
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(232, 184, 75, 0.10) 0%, transparent 55%),
+    radial-gradient(circle at 10% 90%, rgba(0, 0, 0, 0.25) 0%, transparent 45%);
+}
+
+/* 1. HUD Bar (Visual Top) */
+#view-game.active .hud-bar {
+  height: 100%;
+  width: auto;
+  display: flex;
+  flex-direction: column-reverse; /* Put Timer on visual left, Score on visual right */
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  margin-right: 12px; /* Acts as visual margin-bottom */
+}
+
+/* 2. Movie Card Display (Visual Center) */
+#view-game.active .card-display {
+  flex: 1;
+  height: 100%;
+  padding: 0;
+}
+
+#view-game.active .card-inner {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 16px 20px;
+}
+
+#view-game.active .movie-title-large {
+  /* Swap vw for vh so font sizes scale correctly along the visual horizontal width (layout height) */
+  font-size: clamp(1.8rem, 8vh, 3.2rem);
+}
+
+/* 3. Action Buttons (Visual Bottom) */
+#view-game.active .game-actions {
+  width: 72px; /* Visual height of buttons container */
+  height: 100%; /* Spans full visual width */
+  display: flex;
+  flex-direction: column; /* Stacks buttons side-by-side horizontally in rotated layout */
+  gap: 16px;
+  margin: 0;
+  margin-left: 12px; /* Acts as visual margin-top */
+}
+
+#view-game.active .action-btn {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
 
